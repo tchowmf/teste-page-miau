@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsMiau Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --surface2: #181c22;
+    --surface3: #1e232b;
+    --border: #252b35;
+    --border2: #2e3645;
+    --green: #00e676;
+    --green-dim: #00e67622;
+    --green-mid: #00e67644;
+    --yellow: #ffd740;
+    --yellow-dim: #ffd74022;
+    --red: #ff5252;
+    --red-dim: #ff525222;
+    --blue: #40c4ff;
+    --blue-dim: #40c4ff18;
+    --text: #e8edf5;
+    --text2: #8a95a8;
+    --text3: #4a5568;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--green);
+  }
+
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: var(--green);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  .logo span { color: var(--text2); font-weight: 300; }
+
+  .connection-status {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+    animation: pulse-dot 2s infinite;
+  }
+  .dot.active { background: var(--green); }
+  .dot.error { background: var(--red); animation: none; }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* SETUP SCREEN */
+  .setup-screen {
+    min-height: calc(100vh - 60px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px;
+    width: 100%;
+    max-width: 440px;
+  }
+
+  .setup-title {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+
+  .setup-sub {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  .field { margin-bottom: 20px; }
+
+  label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px var(--green-dim);
+  }
+
+  input::placeholder { color: var(--text3); }
+  select option { background: var(--surface2); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    transition: all 0.15s;
+  }
+
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--green);
+    color: #000;
+    width: 100%;
+    padding: 13px;
+    font-size: 14px;
+  }
+  .btn-primary:hover:not(:disabled) { background: #00ff88; transform: translateY(-1px); box-shadow: 0 4px 20px var(--green-mid); }
+
+  .btn-sm { padding: 7px 14px; font-size: 12px; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+  .btn-ghost:hover:not(:disabled) { border-color: var(--text2); color: var(--text); background: var(--surface3); }
+
+  .btn-danger {
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    color: var(--red);
+  }
+  .btn-danger:hover:not(:disabled) { background: var(--red); color: #fff; }
+
+  .btn-green {
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    color: var(--green);
+  }
+  .btn-green:hover:not(:disabled) { background: var(--green); color: #000; }
+
+  .btn-yellow {
+    background: var(--yellow-dim);
+    border: 1px solid var(--yellow);
+    color: var(--yellow);
+  }
+  .btn-yellow:hover:not(:disabled) { background: var(--yellow); color: #000; }
+
+  .btn-blue {
+    background: var(--blue-dim);
+    border: 1px solid var(--blue);
+    color: var(--blue);
+  }
+  .btn-blue:hover:not(:disabled) { background: var(--blue); color: #000; }
+
+  .main {
+    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: none;
+  }
+  .main.visible { display: block; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .section-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::before {
+    content: '';
+    width: 3px; height: 16px;
+    background: var(--green);
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  .instances-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .instance-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+    animation: card-in 0.3s ease both;
+  }
+
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .instance-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .instance-card.status-open { border-top: 2px solid var(--green); }
+  .instance-card.status-connecting { border-top: 2px solid var(--yellow); }
+  .instance-card.status-close { border-top: 2px solid var(--red); }
+
+  .card-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .instance-name {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .status-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .status-badge.open { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .status-badge.connecting { background: var(--yellow-dim); color: var(--yellow); border: 1px solid var(--yellow); }
+  .status-badge.close { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+  .status-badge .dot { width: 5px; height: 5px; background: currentColor; animation: none; }
+  .status-badge.open .dot { animation: pulse-dot 1.5s infinite; }
+
+  .card-body { padding: 16px 20px; }
+
+  .card-info {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .card-info span { color: var(--text2); }
+
+  .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 36px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.95);
+    transition: transform 0.2s;
+    position: relative;
+  }
+  .modal-overlay.open .modal { transform: scale(1); }
+
+  .modal-title {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 4px;
+  }
+
+  .modal-sub {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 24px;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+
+  .qr-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .qr-box {
+    background: #fff;
+    padding: 16px;
+    border-radius: 12px;
+    width: 220px; height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .qr-box img { width: 100%; height: 100%; object-fit: contain; }
+
+  .qr-instructions {
+    font-size: 12px;
+    color: var(--text2);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .qr-timer {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    text-align: center;
+  }
+  .qr-timer span { color: var(--yellow); }
+
+  .create-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 32px;
+    display: none;
+  }
+  .create-section.open { display: block; animation: card-in 0.2s ease both; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+
+  .webhook-form { display: flex; flex-direction: column; gap: 16px; }
+
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toast-in 0.3s ease both;
+    max-width: 320px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+
+  .toast.success { border-left: 3px solid var(--green); }
+  .toast.error { border-left: 3px solid var(--red); }
+  .toast.info { border-left: 3px solid var(--blue); }
+
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+    font-family: var(--mono);
+    font-size: 13px;
+    grid-column: 1 / -1;
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+
+  .config-bar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .config-bar .url { color: var(--blue); }
+  .config-bar button {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .config-bar button:hover { color: var(--text); background: var(--border); }
+
+  .loading-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 12px;
+    grid-column: 1 / -1;
+  }
+
+  .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .checkbox-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .checkbox-pill input { display: none; }
+  .checkbox-pill.checked { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+
+  @media (max-width: 600px) {
+    header { padding: 0 16px; }
+    .main { padding: 16px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .setup-card { padding: 28px 20px; }
+    .instances-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🐱</div>
+      WhatsMiau <span>/ panel</span>
+    </div>
+    <div class="connection-status" id="connStatus">
+      <div class="dot" id="connDot"></div>
+      <span id="connText">não conectado</span>
+    </div>
+  </header>
+
+  <!-- SETUP: só pede a API Key, URL é sempre /api/ (proxy interno) -->
+  <div class="setup-screen" id="setupScreen">
+    <div class="setup-card">
+      <div class="setup-title">// configuração</div>
+      <div class="setup-sub">
+        Informe a API Key do seu WhatsMiau.<br>
+        A conexão é feita internamente pelo servidor.
+      </div>
+      <div class="field">
+        <label>API Key</label>
+        <input type="password" id="apiKey" placeholder="sua-api-key" />
+      </div>
+      <button class="btn btn-primary" onclick="connect()" id="connectBtn">
+        Entrar no Painel
+      </button>
+      <div style="margin-top:12px; font-size:11px; color:var(--text3); font-family:var(--mono); text-align:center;">
+        A chave fica salva apenas no seu navegador.
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN PANEL -->
+  <div class="main" id="mainPanel">
+
+    <div class="config-bar">
+      <span>api: <span class="url">interno via proxy</span></span>
+      <button onclick="logout()">↩ trocar chave</button>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">instâncias</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="loadInstances()">↻ atualizar</button>
+        <button class="btn btn-green btn-sm" onclick="toggleCreate()">+ nova instância</button>
+      </div>
+    </div>
+
+    <!-- CREATE FORM -->
+    <div class="create-section" id="createSection">
+      <div class="section-title" style="margin-bottom:20px;">nova instância</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Nome da Instância</label>
+          <input type="text" id="newInstanceName" placeholder="meubot" />
+        </div>
+        <div class="field">
+          <label>Webhook URL (opcional)</label>
+          <input type="text" id="newWebhook" placeholder="https://n8n.dominio.com/webhook/abc" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost btn-sm" onclick="toggleCreate()">cancelar</button>
+        <button class="btn btn-green btn-sm" onclick="createInstance()" id="createBtn">criar instância</button>
+      </div>
+    </div>
+
+    <div class="instances-grid" id="instancesGrid">
+      <div class="loading-overlay">
+        <div class="spinner"></div>
+        carregando instâncias...
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- QR MODAL -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('qrModal')">✕</button>
+    <div class="modal-title">// conectar instância</div>
+    <div class="modal-sub" id="qrModalSub">Escaneie o QR Code com o WhatsApp</div>
+    <div class="qr-container">
+      <div class="qr-box" id="qrBox">
+        <div class="spinner"></div>
+      </div>
+      <div class="qr-instructions">
+        Abra o WhatsApp → <strong>Aparelhos conectados</strong><br>
+        → <strong>Conectar aparelho</strong> → escaneie o código
+      </div>
+      <div class="qr-timer" id="qrTimer">atualizando em <span id="qrCountdown">30</span>s</div>
+      <button class="btn btn-ghost btn-sm" onclick="refreshQR()">↻ atualizar QR</button>
+    </div>
+  </div>
+</div>
+
+<!-- WEBHOOK MODAL -->
+<div class="modal-overlay" id="webhookModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('webhookModal')">✕</button>
+    <div class="modal-title">// configurar webhook</div>
+    <div class="modal-sub" id="webhookModalSub">Configure o endpoint que receberá os eventos</div>
+    <div class="webhook-form">
+      <div class="field">
+        <label>URL do Webhook</label>
+        <input type="text" id="whUrl" placeholder="https://n8n.dominio.com/webhook/abc" />
+      </div>
+      <div class="field">
+        <label>Eventos</label>
+        <div class="checkbox-group" id="eventCheckboxes">
+          <label class="checkbox-pill checked" onclick="togglePill(this)">
+            <input type="checkbox" value="MESSAGES_UPSERT" checked> MESSAGES_UPSERT
+          </label>
+          <label class="checkbox-pill checked" onclick="togglePill(this)">
+            <input type="checkbox" value="MESSAGES_UPDATE" checked> MESSAGES_UPDATE
+          </label>
+          <label class="checkbox-pill" onclick="togglePill(this)">
+            <input type="checkbox" value="CONTACTS_UPSERT"> CONTACTS_UPSERT
+          </label>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('webhookModal')">cancelar</button>
+        <button class="btn btn-blue btn-sm" onclick="saveWebhook()" id="saveWhBtn">salvar webhook</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ─── ESTADO ───────────────────────────────────────────────────────────────────
+// A URL base é sempre /api/ — o nginx faz proxy para o container interno
+// Assim não há CORS e não precisamos expor a URL real da API
+const BASE = '/api';
+let apiKey = '';
+let activeQrInstance = null;
+let qrInterval = null;
+let qrCountdown = 30;
+let activeWebhookInstance = null;
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+(function init() {
+  const saved = localStorage.getItem('wm_key');
+  if (saved) {
+    apiKey = saved;
+    showPanel();
+    loadInstances();
+  } else {
+    showSetup();
+  }
+})();
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+function showSetup() {
+  document.getElementById('setupScreen').style.display = 'flex';
+  document.getElementById('mainPanel').classList.remove('visible');
+  setConnStatus(false);
+}
+
+function showPanel() {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('mainPanel').classList.add('visible');
+}
+
+function logout() {
+  localStorage.removeItem('wm_key');
+  apiKey = '';
+  showSetup();
+  setConnStatus(false);
+}
+
+// ─── CONNECT ──────────────────────────────────────────────────────────────────
+async function connect() {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) { toast('Informe a API Key', 'error'); return; }
+
+  const btn = document.getElementById('connectBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> verificando...';
+
+  try {
+    const res = await fetch(`${BASE}/instance/fetchInstances`, {
+      headers: { 'apikey': key }
+    });
+
+    if (res.ok || res.status === 200) {
+      apiKey = key;
+      localStorage.setItem('wm_key', key);
+      showPanel();
+      loadInstances();
+      toast('Conectado!', 'success');
+    } else if (res.status === 401 || res.status === 403) {
+      toast('API Key inválida', 'error');
+    } else {
+      toast(`Erro ${res.status} — verifique o servidor`, 'error');
+    }
+  } catch(e) {
+    toast('Não foi possível alcançar a API', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Entrar no Painel';
+  }
+}
+
+// ─── API HELPER ───────────────────────────────────────────────────────────────
+function apiq(method, path, body) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': apiKey,
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(`${BASE}${path}`, opts);
+}
+
+// ─── INSTANCES ────────────────────────────────────────────────────────────────
+async function loadInstances() {
+  const grid = document.getElementById('instancesGrid');
+  grid.innerHTML = '<div class="loading-overlay"><div class="spinner"></div> carregando...</div>';
+  setConnStatus(null);
+
+  try {
+    const res = await apiq('GET', '/instance/fetchInstances');
+    if (res.status === 401 || res.status === 403) {
+      toast('API Key inválida ou expirada', 'error');
+      logout();
+      return;
+    }
+    if (!res.ok) throw new Error('server');
+    const data = await res.json();
+    setConnStatus(true);
+    renderInstances(Array.isArray(data) ? data : []);
+  } catch(e) {
+    setConnStatus(false);
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div>Erro ao carregar instâncias.</div>';
+  }
+}
+
+function renderInstances(instances) {
+  const grid = document.getElementById('instancesGrid');
+  if (!instances.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🐱</div>Nenhuma instância encontrada.<br>Crie uma nova acima.</div>';
+    return;
+  }
+
+  grid.innerHTML = instances.map((inst, i) => {
+    const name = inst.instance?.instanceName || inst.instanceName || '?';
+    const status = inst.instance?.status || inst.status || 'close';
+    const phone = inst.instance?.owner || inst.owner || '—';
+    const statusLabel = { open: 'conectado', connecting: 'aguardando QR', close: 'desconectado' }[status] || status;
+    const delay = i * 0.05;
+
+    return `
+    <div class="instance-card status-${status}" style="animation-delay:${delay}s">
+      <div class="card-header">
+        <div class="instance-name">${name}</div>
+        <div class="status-badge ${status}">
+          <div class="dot"></div>${statusLabel}
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-info">
+          <div>número: <span>${phone}</span></div>
+        </div>
+        <div class="card-actions">
+          ${status !== 'open' ? `<button class="btn btn-green btn-sm" onclick="openQR('${name}')">📷 QR Code</button>` : ''}
+          ${status === 'open' ? `<button class="btn btn-ghost btn-sm" onclick="disconnectInstance('${name}')">⏏ desconectar</button>` : ''}
+          <button class="btn btn-blue btn-sm" onclick="openWebhook('${name}')">🔗 webhook</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteInstance('${name}')">✕ deletar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── CREATE ───────────────────────────────────────────────────────────────────
+function toggleCreate() {
+  document.getElementById('createSection').classList.toggle('open');
+}
+
+async function createInstance() {
+  const name = document.getElementById('newInstanceName').value.trim();
+  const webhook = document.getElementById('newWebhook').value.trim();
+  if (!name) { toast('Informe o nome da instância', 'error'); return; }
+
+  const btn = document.getElementById('createBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const body = { instanceName: name, integration: 'WHATSAPP-BAILEYS' };
+    if (webhook) {
+      body.webhook = { url: webhook, enabled: true, events: ['MESSAGES_UPSERT','MESSAGES_UPDATE'] };
+    }
+
+    const res = await apiq('POST', '/instance/create', body);
+    const data = await res.json();
+
+    if (res.ok || res.status === 201) {
+      toast(`Instância "${name}" criada!`, 'success');
+      document.getElementById('newInstanceName').value = '';
+      document.getElementById('newWebhook').value = '';
+      document.getElementById('createSection').classList.remove('open');
+      await loadInstances();
+      setTimeout(() => openQR(name), 600);
+    } else {
+      toast(data?.message || 'Erro ao criar instância', 'error');
+    }
+  } catch(e) {
+    toast('Erro de conexão', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'criar instância';
+  }
+}
+
+// ─── DELETE ───────────────────────────────────────────────────────────────────
+async function deleteInstance(name) {
+  if (!confirm(`Deletar "${name}"?\nEsta ação não pode ser desfeita.`)) return;
+  try {
+    const res = await apiq('DELETE', `/instance/delete/${name}`);
+    if (res.ok) { toast(`"${name}" deletada`, 'success'); loadInstances(); }
+    else toast('Erro ao deletar', 'error');
+  } catch(e) { toast('Erro de conexão', 'error'); }
+}
+
+// ─── DISCONNECT ───────────────────────────────────────────────────────────────
+async function disconnectInstance(name) {
+  try {
+    const res = await apiq('DELETE', `/instance/logout/${name}`);
+    if (res.ok) { toast(`"${name}" desconectado`, 'success'); loadInstances(); }
+    else toast('Erro ao desconectar', 'error');
+  } catch(e) { toast('Erro de conexão', 'error'); }
+}
+
+// ─── QR CODE ─────────────────────────────────────────────────────────────────
+function openQR(name) {
+  activeQrInstance = name;
+  document.getElementById('qrModalSub').textContent = `instância: ${name}`;
+  document.getElementById('qrBox').innerHTML = '<div class="spinner"></div>';
+  openModal('qrModal');
+  fetchQR(name);
+  startQRCountdown();
+}
+
+async function fetchQR(name) {
+  const box = document.getElementById('qrBox');
+  try {
+    const res = await apiq('GET', `/instance/connect/${name}`);
+    const data = await res.json();
+
+    const b64 = data?.base64 || data?.qrcode?.base64 || data?.qr?.base64 || null;
+    const code = data?.code || data?.qrcode?.code || null;
+
+    if (b64) {
+      const src = b64.startsWith('data:') ? b64 : `data:image/png;base64,${b64}`;
+      box.innerHTML = `<img src="${src}" alt="QR Code" />`;
+    } else if (code) {
+      box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(code)}" alt="QR Code" />`;
+    } else if (data?.instance?.status === 'open') {
+      box.innerHTML = '<span style="font-size:32px">✅</span>';
+      document.getElementById('qrTimer').textContent = 'instância conectada!';
+      clearInterval(qrInterval);
+      toast('WhatsApp conectado!', 'success');
+      setTimeout(() => { closeModal('qrModal'); loadInstances(); }, 2000);
+    } else {
+      box.innerHTML = '<span style="font-size:11px;color:var(--text3);font-family:var(--mono)">aguardando QR...</span>';
+    }
+  } catch(e) {
+    box.innerHTML = '<span style="font-size:11px;color:var(--red);font-family:var(--mono)">erro ao carregar QR</span>';
+  }
+}
+
+function refreshQR() {
+  if (activeQrInstance) {
+    document.getElementById('qrBox').innerHTML = '<div class="spinner"></div>';
+    fetchQR(activeQrInstance);
+    qrCountdown = 30;
+  }
+}
+
+function startQRCountdown() {
+  clearInterval(qrInterval);
+  qrCountdown = 30;
+  const el = () => document.getElementById('qrCountdown');
+  if (el()) el().textContent = qrCountdown;
+  qrInterval = setInterval(() => {
+    qrCountdown--;
+    const c = document.getElementById('qrCountdown');
+    if (c) c.textContent = qrCountdown;
+    if (qrCountdown <= 0) {
+      qrCountdown = 30;
+      if (activeQrInstance) fetchQR(activeQrInstance);
+    }
+  }, 1000);
+}
+
+// ─── WEBHOOK ─────────────────────────────────────────────────────────────────
+function openWebhook(name) {
+  activeWebhookInstance = name;
+  document.getElementById('webhookModalSub').textContent = `instância: ${name}`;
+  document.getElementById('whUrl').value = '';
+  openModal('webhookModal');
+  loadWebhook(name);
+}
+
+async function loadWebhook(name) {
+  try {
+    const res = await apiq('GET', `/webhook/find/${name}`);
+    if (res.ok) {
+      const data = await res.json();
+      const url = data?.webhook?.url || data?.url || '';
+      const events = data?.webhook?.events || data?.events || [];
+      document.getElementById('whUrl').value = url;
+      document.querySelectorAll('#eventCheckboxes .checkbox-pill').forEach(pill => {
+        const cb = pill.querySelector('input');
+        const active = events.includes(cb.value);
+        cb.checked = active;
+        pill.classList.toggle('checked', active);
+      });
+    }
+  } catch(e) {}
+}
+
+async function saveWebhook() {
+  const url = document.getElementById('whUrl').value.trim();
+  if (!url) { toast('Informe a URL do webhook', 'error'); return; }
+
+  const events = [];
+  document.querySelectorAll('#eventCheckboxes .checkbox-pill input:checked').forEach(cb => events.push(cb.value));
+
+  const btn = document.getElementById('saveWhBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const res = await apiq('POST', `/webhook/set/${activeWebhookInstance}`, {
+      webhook: { url, enabled: true, events }
+    });
+
+    if (res.ok || res.status === 201) {
+      toast('Webhook salvo!', 'success');
+      closeModal('webhookModal');
+    } else {
+      const data = await res.json().catch(() => ({}));
+      toast(data?.message || 'Erro ao salvar webhook', 'error');
+    }
+  } catch(e) {
+    toast('Erro de conexão', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'salvar webhook';
+  }
+}
+
+// ─── MODALS ───────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (id === 'qrModal') {
+    clearInterval(qrInterval);
+    activeQrInstance = null;
+    loadInstances();
+  }
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) closeModal(overlay.id);
+  });
+});
+
+// ─── PILLS ────────────────────────────────────────────────────────────────────
+function togglePill(pill) {
+  const cb = pill.querySelector('input');
+  cb.checked = !cb.checked;
+  pill.classList.toggle('checked', cb.checked);
+}
+
+// ─── STATUS ───────────────────────────────────────────────────────────────────
+function setConnStatus(active) {
+  const dot = document.getElementById('connDot');
+  const text = document.getElementById('connText');
+  if (active === null) { dot.className = 'dot'; text.textContent = 'verificando...'; }
+  else if (active) { dot.className = 'dot active'; text.textContent = 'servidor online'; }
+  else { dot.className = 'dot error'; text.textContent = 'sem conexão'; }
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const icons = { success: '✓', error: '✕', info: 'i' };
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'toast-in 0.3s ease reverse both';
+    setTimeout(() => el.remove(), 300);
+  }, 3500);
+}
+
+// ─── KEYBOARD ─────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
+  if (e.key === 'Enter' && document.getElementById('setupScreen').style.display !== 'none') connect();
+});
+</script>
+</body>
+</html>
