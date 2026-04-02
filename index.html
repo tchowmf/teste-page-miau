@@ -785,7 +785,7 @@ async function connect() {
   btn.innerHTML = '<span class="spinner"></span> verificando...';
 
   try {
-    const res = await fetch(`${BASE}/instance/fetchInstances`, {
+    const res = await fetch(`${BASE}/v1/instance/fetchInstances`, {
       headers: { 'apikey': key }
     });
 
@@ -828,7 +828,7 @@ async function loadInstances() {
   setConnStatus(null);
 
   try {
-    const res = await apiq('GET', '/instance/fetchInstances');
+    const res = await apiq('GET', '/v1/instance/fetchInstances');
     if (res.status === 401 || res.status === 403) {
       toast('API Key inválida ou expirada', 'error');
       logout();
@@ -901,7 +901,7 @@ async function createInstance() {
       body.webhook = { url: webhook, enabled: true, events: ['MESSAGES_UPSERT','MESSAGES_UPDATE'] };
     }
 
-    const res = await apiq('POST', '/instance/create', body);
+    const res = await apiq('POST', '/v1/instance/create', body);
     const data = await res.json();
 
     if (res.ok || res.status === 201) {
@@ -926,7 +926,7 @@ async function createInstance() {
 async function deleteInstance(name) {
   if (!confirm(`Deletar "${name}"?\nEsta ação não pode ser desfeita.`)) return;
   try {
-    const res = await apiq('DELETE', `/instance/delete/${name}`);
+    const res = await apiq('DELETE', `/v1/instance/delete/${name}`);
     if (res.ok) { toast(`"${name}" deletada`, 'success'); loadInstances(); }
     else toast('Erro ao deletar', 'error');
   } catch(e) { toast('Erro de conexão', 'error'); }
@@ -935,7 +935,7 @@ async function deleteInstance(name) {
 // ─── DISCONNECT ───────────────────────────────────────────────────────────────
 async function disconnectInstance(name) {
   try {
-    const res = await apiq('DELETE', `/instance/logout/${name}`);
+    const res = await apiq('DELETE', `/v1/instance/logout/${name}`);
     if (res.ok) { toast(`"${name}" desconectado`, 'success'); loadInstances(); }
     else toast('Erro ao desconectar', 'error');
   } catch(e) { toast('Erro de conexão', 'error'); }
@@ -954,7 +954,7 @@ function openQR(name) {
 async function fetchQR(name) {
   const box = document.getElementById('qrBox');
   try {
-    const res = await apiq('GET', `/instance/connect/${name}`);
+    const res = await apiq('GET', `/v1/instance/connect/${name}`);
     const data = await res.json();
 
     const b64 = data?.base64 || data?.qrcode?.base64 || data?.qr?.base64 || null;
