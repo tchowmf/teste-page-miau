@@ -1014,7 +1014,7 @@ function openWebhook(name) {
 
 async function loadWebhook(name) {
   try {
-    const res = await apiq('GET', `/webhook/find/${name}`);
+    const res = await apiq('GET', `/v1/webhook/find/${name}`);
     if (res.ok) {
       const data = await res.json();
       const url = data?.webhook?.url || data?.url || '';
@@ -1042,7 +1042,7 @@ async function saveWebhook() {
   btn.innerHTML = '<span class="spinner"></span>';
 
   try {
-    const res = await apiq('POST', `/webhook/set/${activeWebhookInstance}`, {
+    const res = await apiq('POST', `/v1/webhook/set/${activeWebhookInstance}`, {
       webhook: { url, enabled: true, events }
     });
 
