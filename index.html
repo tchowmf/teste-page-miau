@@ -737,7 +737,7 @@
 // ─── ESTADO ───────────────────────────────────────────────────────────────────
 // A URL base é sempre /api/ — o nginx faz proxy para o container interno
 // Assim não há CORS e não precisamos expor a URL real da API
-const BASE = '/api';
+const BASE = '/api/v1';
 let apiKey = '';
 let activeQrInstance = null;
 let qrInterval = null;
@@ -785,7 +785,7 @@ async function connect() {
   btn.innerHTML = '<span class="spinner"></span> verificando...';
 
   try {
-    const res = await fetch(`${BASE}/v1/instance/fetchInstances`, {
+    const res = await fetch(`${BASE}/instance/fetchInstances`, {
       headers: { 'apikey': key }
     });
 
@@ -828,7 +828,7 @@ async function loadInstances() {
   setConnStatus(null);
 
   try {
-    const res = await apiq('GET', '/v1/instance/fetchInstances');
+    const res = await apiq('GET', '/instance/fetchInstances');
     if (res.status === 401 || res.status === 403) {
       toast('API Key inválida ou expirada', 'error');
       logout();
@@ -852,9 +852,9 @@ function renderInstances(instances) {
   }
 
   grid.innerHTML = instances.map((inst, i) => {
-    const name = inst.instance?.instanceName || inst.instanceName || '?';
-    const status = inst.instance?.status || inst.status || 'close';
-    const phone = inst.instance?.owner || inst.owner || '—';
+    const name = inst.instanceName || inst.instance?.instanceName || '?';
+    const phone = inst.ownerJid || inst.instance?.owner || '—';
+    const status = inst.remoteJID ? 'open' : 'close';
     const statusLabel = { open: 'conectado', connecting: 'aguardando QR', close: 'desconectado' }[status] || status;
     const delay = i * 0.05;
 
@@ -901,7 +901,7 @@ async function createInstance() {
       body.webhook = { url: webhook, enabled: true, events: ['MESSAGES_UPSERT','MESSAGES_UPDATE'] };
     }
 
-    const res = await apiq('POST', '/v1/instance/create', body);
+    const res = await apiq('POST', '/instance/create', body);
     const data = await res.json();
 
     if (res.ok || res.status === 201) {
@@ -926,7 +926,7 @@ async function createInstance() {
 async function deleteInstance(name) {
   if (!confirm(`Deletar "${name}"?\nEsta ação não pode ser desfeita.`)) return;
   try {
-    const res = await apiq('DELETE', `/v1/instance/delete/${name}`);
+    const res = await apiq('DELETE', `/instance/delete/${name}`);
     if (res.ok) { toast(`"${name}" deletada`, 'success'); loadInstances(); }
     else toast('Erro ao deletar', 'error');
   } catch(e) { toast('Erro de conexão', 'error'); }
@@ -935,7 +935,7 @@ async function deleteInstance(name) {
 // ─── DISCONNECT ───────────────────────────────────────────────────────────────
 async function disconnectInstance(name) {
   try {
-    const res = await apiq('DELETE', `/v1/instance/logout/${name}`);
+    const res = await apiq('DELETE', `/instance/logout/${name}`);
     if (res.ok) { toast(`"${name}" desconectado`, 'success'); loadInstances(); }
     else toast('Erro ao desconectar', 'error');
   } catch(e) { toast('Erro de conexão', 'error'); }
@@ -954,15 +954,21 @@ function openQR(name) {
 async function fetchQR(name) {
   const box = document.getElementById('qrBox');
   try {
-    const res = await apiq('GET', `/v1/instance/connect/${name}`);
+    const res = await apiq('GET', `/instance/connect/${name}`);
     const data = await res.json();
 
     const b64 = data?.base64 || data?.qrcode?.base64 || data?.qr?.base64 || null;
     const code = data?.code || data?.qrcode?.code || null;
+    const alreadyConnected = data?.connected === true || data?.message === 'instance already connected';
 
-    if (b64) {
-      const src = b64.startsWith('data:') ? b64 : `data:image/png;base64,${b64}`;
-      box.innerHTML = `<img src="${src}" alt="QR Code" />`;
+    if (alreadyConnected) {
+      box.innerHTML = '<span style="font-size:42px">✅</span>';
+      document.getElementById('qrTimer').textContent = 'instância conectada!';
+      clearInterval(qrInterval);
+      toast('WhatsApp conectado!', 'success');
+      setTimeout(() => { closeModal('qrModal'); loadInstances(); }, 2000);
+    } else if (b64) {
+      box.innerHTML = `<img src="${b64}" alt="QR Code" />`;
     } else if (code) {
       box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(code)}" alt="QR Code" />`;
     } else if (data?.instance?.status === 'open') {
@@ -1014,7 +1020,7 @@ function openWebhook(name) {
 
 async function loadWebhook(name) {
   try {
-    const res = await apiq('GET', `/v1/webhook/find/${name}`);
+    const res = await apiq('GET', `/webhook/find/${name}`);
     if (res.ok) {
       const data = await res.json();
       const url = data?.webhook?.url || data?.url || '';
@@ -1042,7 +1048,7 @@ async function saveWebhook() {
   btn.innerHTML = '<span class="spinner"></span>';
 
   try {
-    const res = await apiq('POST', `/v1/webhook/set/${activeWebhookInstance}`, {
+    const res = await apiq('POST', `/webhook/set/${activeWebhookInstance}`, {
       webhook: { url, enabled: true, events }
     });
 
