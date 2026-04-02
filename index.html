@@ -829,15 +829,25 @@ async function loadInstances() {
 
   try {
     const res = await apiq('GET', '/instance/fetchInstances');
-    if (res.status === 401 || res.status === 403) {
-      toast('API Key inválida ou expirada', 'error');
-      logout();
-      return;
-    }
+    if (res.status === 401 || res.status === 403) { toast('API Key inválida ou expirada', 'error'); logout(); return; }
     if (!res.ok) throw new Error('server');
-    const data = await res.json();
+    const instances = await res.json();
     setConnStatus(true);
-    renderInstances(Array.isArray(data) ? data : []);
+
+    // Checa status real de cada instância via /connect
+    const withStatus = await Promise.all((Array.isArray(instances) ? instances : []).map(async inst => {
+      const name = inst.instanceName || inst.instance?.instanceName;
+      try {
+        const r = await apiq('GET', `/instance/connect/${name}`);
+        const d = await r.json();
+        const connected = d?.connected === true || d?.message === 'instance already connected';
+        return { ...inst, _connected: connected };
+      } catch(e) {
+        return { ...inst, _connected: false };
+      }
+    }));
+
+    renderInstances(withStatus);
   } catch(e) {
     setConnStatus(false);
     grid.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div>Erro ao carregar instâncias.</div>';
@@ -853,9 +863,9 @@ function renderInstances(instances) {
 
   grid.innerHTML = instances.map((inst, i) => {
     const name = inst.instanceName || inst.instance?.instanceName || '?';
-    const phone = inst.ownerJid || inst.instance?.owner || '—';
-    const status = inst.remoteJID ? 'open' : 'close';
-    const statusLabel = { open: 'conectado', connecting: 'aguardando QR', close: 'desconectado' }[status] || status;
+    const phone = (inst.ownerJid || inst.instance?.owner || '').split('@')[0] || '—';
+    const status = inst._connected ? 'open' : 'close';
+    const statusLabel = { open: 'conectado', close: 'desconectado' }[status];
     const delay = i * 0.05;
 
     return `
