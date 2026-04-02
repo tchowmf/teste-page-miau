@@ -785,7 +785,7 @@ async function connect() {
   btn.innerHTML = '<span class="spinner"></span> verificando...';
 
   try {
-    const res = await fetch(`${BASE}/instance/fetchInstances`, {
+    const res = await fetch(`${BASE}/v1/instance/fetchInstances`, {
       headers: { 'apikey': key }
     });
 
